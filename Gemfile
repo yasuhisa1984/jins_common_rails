@@ -8,7 +8,7 @@ gem "rspec-rails"
 gem "factory_girl_rails"
 
 group :test, :development do
-  gem 'rails'
+  gem 'rails', "~> 4.0.4"
   gem 'rspec-rails'
 end
 
