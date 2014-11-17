@@ -37,4 +37,16 @@ class String
       )
     end
   end
+
+  def get_text_as_html
+    html = self.gsub(/\r\n|\r|\n/, "<br />")
+    
+    URI.extract(html, %w{http https}).uniq.each do |uri|
+      unless uri.match(/(\.jpg|\.jpeg|\.png)/)
+        html.gsub!(uri, %Q{<a href="#{uri}" target="_blank"">#{uri}</a>})
+      end
+    end
+    html
+  end  
+
 end
