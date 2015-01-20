@@ -1,6 +1,4 @@
-module Constants
-  class Aws < Settingslogic
-    source "#{Rails.root}/config/constants/aws.yml"
-    namespace Rails.env
-  end
+class Aws < Settingslogic
+  source "#{Rails.root}/config/constants/aws.yml"
+  namespace Rails.env
 end
