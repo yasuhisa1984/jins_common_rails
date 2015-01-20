@@ -4,13 +4,22 @@ source "https://rubygems.org"
 # Bundler will treat runtime dependencies like base dependencies, and
 # development dependencies will be added by default to the :development group.
 gemspec
-gem "rspec-rails"
-gem "factory_girl_rails"
 
 group :test, :development do
   gem 'rails', "~> 4.0.4"
   gem 'rspec-rails'
+  gem "factory_girl_rails"
 end
+
+gem 'settingslogic'
+gem 'happymapper'
+
+gem 'aws-sdk'
+gem 'peddler'
+gem "amazon-ecs"
+
+gem 'google-api-client'
+gem 'cloudprint', github: 'stlewis/cloudprint', branch: 'master'
 
 # Declare any dependencies that are still in development here instead of in
 # your gemspec. These might include edge Rails or gems from your path or
