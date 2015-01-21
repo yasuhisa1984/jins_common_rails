@@ -7,4 +7,18 @@ class Hash
       self[method_string] 
     end
   end
+  
+  def merge_flat(model)
+    self.each do |key, value|
+      method = "#{key}="
+      next unless model.respond_to? method
+      
+      data = value
+      if Hash.try_convert(value).present?
+        data = value.to_json
+      end
+      model.send(method, data) 
+    end
+    model
+  end
 end
