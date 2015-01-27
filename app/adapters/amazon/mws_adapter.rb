@@ -482,6 +482,28 @@ class Amazon::MwsAdapter
     info = Amazon::MWS::TransportDocument.parse(res.data[:body], :single => true, :use_default_namespace => true)
   end
 
+  # Lists the marketplaces the seller participates in
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/sellers/Sellers_ListMarketplaceParticipations.html
+  # @param next_token [String]
+  # @return [Peddler::XMLParser]
+  def list_marketplace_participations
+    res = get_sellers_client.list_marketplace_participations
+    Rails.logger.info res.data[:body]
+    res.data[:body]
+  end
+
+  # Lists the next page of marketplaces the seller participates in
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/sellers/Sellers_ListMarketplaceParticipationsByNextToken.html
+  # @param next_token [String]
+  # @return [Peddler::XMLParser]
+  def list_marketplace_participations_by_next_token(next_token)
+    res = get_sellers_client.list_marketplace_participations_by_next_token next_token
+    Rails.logger.info res.data[:body]
+    res.data[:body]
+  end
+
   private
 
   def get_product_client
@@ -531,6 +553,19 @@ class Amazon::MwsAdapter
       puts @inbound_shipment_client.inspect
     end
     @inbound_shipment_client
+  end
+
+  def get_sellers_client
+    if @sellers_client.blank?
+      @sellers_client = MWS.sellers(
+        :marketplace_id => @marketplace_id,
+        :merchant_id => @merchant_id,
+        :aws_access_key_id => @access_key_id,
+        :aws_secret_access_key => @secret_access_key
+      )
+      puts @sellers_client.inspect
+    end
+    @sellers_client
   end
 
 end
