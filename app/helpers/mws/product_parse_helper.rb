@@ -51,14 +51,15 @@ module Mws::ProductParseHelper
       }
       
       [
-        {:condition => "New", :method => [:new_lowest=, :new_fba_lowest=]},
-        {:condition => "Used", :method => [:used_lowest=, :used_fba_lowest=]},
-        {:condition => "Collectible", :method => [:collectible_lowest=, :collectible_fba_lowest=]}
+        {:condition => "New", :method => [:new_lowest=, :new_shipping=, :new_fba_lowest=]},
+        {:condition => "Used", :method => [:used_lowest=, :used_shipping=, :used_fba_lowest=]},
+        {:condition => "Collectible", :method => [:collectible_lowest=, :collectible_shipping=, :collectible_fba_lowest=]}
       ].each do |defs|
         if result_data[defs[:condition]].present?
           condition = defs[:condition]
           methods = defs[:method]
           offer.send(methods.first, result_data[condition].first[:listing_price])
+          offer.send(methods[1], result_data[condition].first[:shipping])
           result_data[condition].each do |listing|
             offer.send(methods.last, listing[:listing_price]) if listing[:channel] == "Amazon"
           end
