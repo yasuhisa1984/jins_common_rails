@@ -14,6 +14,9 @@ end
 gem 'settingslogic'
 gem 'happymapper'
 
+gem 'chatwork'
+gem 'faraday'
+
 gem 'aws-sdk'
 gem 'peddler'
 gem "amazon-ecs"
