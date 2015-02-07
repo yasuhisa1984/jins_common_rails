@@ -19,7 +19,6 @@ class Chatwork::ApiAdapter
   end
   
   def add_task(message, limit, *ids)
-    p ids
     conn = get_connection
     
     response = conn.post do |request|
@@ -33,8 +32,8 @@ class Chatwork::ApiAdapter
       }
       
       request.body[:limit] = limit if limit.present?
-      p request
     end
+    response
   end
 
   def get_me
@@ -58,7 +57,7 @@ class Chatwork::ApiAdapter
     end
     response
   end
-
+  
   def get_connection
     conn = Faraday::Connection.new(url: 'https://api.chatwork.com') do |builder|
       builder.use Faraday::Request::UrlEncoded
