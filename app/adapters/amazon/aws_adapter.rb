@@ -5,6 +5,6 @@ require "aws-sdk"
 class Amazon::AwsAdapter
   def initialize(config={})
     Rails.logger.info config
-    Aws.config(config)
+    AWS.config(config)
   end
 end

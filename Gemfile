@@ -17,7 +17,7 @@ gem 'happymapper'
 gem 'chatwork'
 gem 'faraday'
 
-gem 'aws-sdk'
+gem 'aws-sdk', '~>1'
 gem 'peddler'
 gem "amazon-ecs"
 

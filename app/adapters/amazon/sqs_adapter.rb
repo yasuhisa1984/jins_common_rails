@@ -27,7 +27,7 @@ class Amazon::SqsAdapter < Amazon::AwsAdapter
 
   private
   def create_client
-    client = Aws::SQS.new
+    client = AWS::SQS.new
     client
   end
 end
