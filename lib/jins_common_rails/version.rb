@@ -1,3 +1,3 @@
 module JinsCommonRails
-  VERSION = "0.150208.1"
+  VERSION = "0.150209.1"
 end
