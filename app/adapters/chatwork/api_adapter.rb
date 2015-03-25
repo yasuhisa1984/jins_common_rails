@@ -14,14 +14,14 @@ class Chatwork::ApiAdapter
       request.headers = {
         'X-ChatWorkToken' => @api_key
       }
-      request.params = {
-        :body => message,
+      request.body = {
+        :body => body,
       }
     end
     response
   end
   
-  def add_task(message, limit, *ids)
+  def add_task(text, limit, *ids)
     conn = get_connection
     
     response = conn.post do |request|
@@ -30,7 +30,7 @@ class Chatwork::ApiAdapter
         'X-ChatWorkToken' => @api_key
       }
       request.params = {
-        :body => message,
+        :body => text,
         :to_ids => ids.join(","),
       }
       
