@@ -7,6 +7,8 @@ class Chatwork::ApiAdapter
   end
   
   def message(body)
+    conn = get_connection
+
     response = conn.post do |request|
       request.url "/v1/rooms/#{@room_id}/messages"
       request.headers = {
