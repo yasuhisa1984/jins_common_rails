@@ -1,5 +1,3 @@
-require "chatwork"
-
 class Chatwork::ApiAdapter
   attr_accessor :api_key, :room_id
   
