@@ -6,16 +6,19 @@ class Chatwork::ApiAdapter
   def initialize(key, room_id)
     @api_key = key
     @room_id = room_id
-    auth_client
-  end
-  
-  def auth_client
-    ChatWork.api_key = @api_key
   end
   
   def message(body)
-    auth_client
-    ChatWork::Message.create(room_id: @room_id, body: body)
+    response = conn.post do |request|
+      request.url "/v1/rooms/#{@room_id}/messages"
+      request.headers = {
+        'X-ChatWorkToken' => @api_key
+      }
+      request.params = {
+        :body => message,
+      }
+    end
+    response
   end
   
   def add_task(message, limit, *ids)

@@ -14,7 +14,6 @@ end
 gem 'settingslogic'
 gem 'happymapper'
 
-gem 'chatwork'
 gem 'faraday'
 
 gem 'aws-sdk', '~>1'
