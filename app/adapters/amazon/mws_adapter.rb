@@ -1,4 +1,11 @@
 require 'peddler'
+require 'rexml/document'
+
+require 'uri'
+require 'time'
+require 'openssl'
+require 'base64'
+require "net/https"
 
 class Amazon::MwsAdapter
   attr_accessor :country
@@ -8,7 +15,7 @@ class Amazon::MwsAdapter
     @merchant_id = opt[:merchant_id]
     @access_key_id = opt[:access_key_id]
     @secret_access_key = opt[:secret_access_key]
-
+    @auth_token = opt[:auth_token] if opt[:auth_token].present?
   end
 
   def valid?
@@ -398,8 +405,11 @@ class Amazon::MwsAdapter
   # @option opts [String] :label_prep_preference
   # @return [Peddler::XMLParser]
   def create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items, opts = {})
-    res = get_inbound_shipment_client.create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items, opts)
-    info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res.data[:body], :single => true, :use_default_namespace => true)
+    res = do_create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items)
+    info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res, :single => true, :use_default_namespace => true)
+    Rails.logger.info info
+    # res = get_inbound_shipment_client.create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items, opts)
+    # info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res.data[:body], :single => true, :use_default_namespace => true)
     plans = []
     info.plans.each{|plan| plans << plan if plan.shipment_id.present?}
     plans
@@ -414,9 +424,13 @@ class Amazon::MwsAdapter
   # @option opts [Array<Struct, Hash>] :inbound_shipment_items
   # @return [Peddler::XMLParser]
   def create_inbound_shipment(shipment_id, inbound_shipment_header, opts = {})
-    res = get_inbound_shipment_client.create_inbound_shipment(shipment_id, inbound_shipment_header, opts)
-    Rails.logger.info res.data[:body]
-    info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
+    # 暫定対応版
+    res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "CreateInboundShipment")
+    info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
+
+    # res = get_inbound_shipment_client.create_inbound_shipment(shipment_id, inbound_shipment_header, opts)
+    # Rails.logger.info res.data[:body]
+    # info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
     Rails.logger.debug info.inspect
     info
   end
@@ -430,9 +444,13 @@ class Amazon::MwsAdapter
   # @option opts [Array<Struct, Hash>] :inbound_shipment_items
   # @return [Peddler::XMLParser]
   def update_inbound_shipment(shipment_id, inbound_shipment_header, opts = {})
-    res = get_inbound_shipment_client.update_inbound_shipment(shipment_id, inbound_shipment_header, opts)
-    Rails.logger.info res.data[:body]
-    info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
+    # 暫定対応版
+    res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "UpdateInboundShipment")
+    info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
+
+    # res = get_inbound_shipment_client.update_inbound_shipment(shipment_id, inbound_shipment_header, opts)
+    # Rails.logger.info res.data[:body]
+    # info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
     Rails.logger.debug info.inspect
     info
   end
@@ -504,6 +522,17 @@ class Amazon::MwsAdapter
     res.data[:body]
   end
 
+  # Gets the MWS Auth Token of the seller account
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/auth_token/AuthToken_GetAuthToken.html
+  # @return [Peddler::XMLParser]
+  def get_auth_token
+    res = get_sellers_client.get_auth_token
+    Rails.logger.info res.data[:body]
+    doc = REXML::Document.new(res.data[:body])
+    doc.elements['GetAuthTokenResponse/GetAuthTokenResult/MWSAuthToken'].text
+  end
+  
   private
 
   def get_product_client
@@ -514,6 +543,7 @@ class Amazon::MwsAdapter
         :aws_access_key_id => @access_key_id,
         :aws_secret_access_key => @secret_access_key
       )
+      @product_client.auth_token = @auth_token if @auth_token.present?
     end
     @product_client
   end
@@ -526,6 +556,7 @@ class Amazon::MwsAdapter
         :aws_access_key_id => @access_key_id,
         :aws_secret_access_key => @secret_access_key
       )
+      @feed_client.auth_token = @auth_token if @auth_token.present?
     end
     @feed_client
   end
@@ -538,6 +569,7 @@ class Amazon::MwsAdapter
         :aws_access_key_id => @access_key_id,
         :aws_secret_access_key => @secret_access_key
       )
+      @report_client.auth_token = @auth_token if @auth_token.present?
     end
     @report_client
   end
@@ -550,7 +582,7 @@ class Amazon::MwsAdapter
         :aws_access_key_id => @access_key_id,
         :aws_secret_access_key => @secret_access_key
       )
-      puts @inbound_shipment_client.inspect
+      @inbound_shipment_client.auth_token = @auth_token if @auth_token.present?
     end
     @inbound_shipment_client
   end
@@ -563,9 +595,122 @@ class Amazon::MwsAdapter
         :aws_access_key_id => @access_key_id,
         :aws_secret_access_key => @secret_access_key
       )
-      puts @sellers_client.inspect
+      @sellers_client.auth_token = @auth_token if @auth_token.present?
     end
     @sellers_client
   end
 
+  def do_create_inbound_shipment_plan(address, items)
+    @@ENDPOINT_SCHEME='https://'
+    @@ENDPOINT_HOST='mws.amazonservices.jp' #Endpoint to JP MWS
+    @@ENDPOINT_URI='/FulfillmentInboundShipment/2010-10-01'
+    
+    params={
+      "AWSAccessKeyId"=>@access_key_id,
+      "MarketplaceId"=>@marketplace_id,
+      "SellerId"=>@merchant_id,
+      "SignatureMethod"=>"HmacSHA256",
+      "SignatureVersion"=>"2",
+      "Version"=>"2010-10-01",
+      "Timestamp"=>Time.now.utc.iso8601
+    }
+    
+    params["Action"]="CreateInboundShipmentPlan"
+    
+    address.each do |key, value|
+      params["ShipFromAddress.#{key}"] = value
+    end
+    
+    items.each_with_index do |item, index|
+      item.each do |key, value|
+        params["InboundShipmentPlanRequestItems.member.#{index+1}.#{key}"] = value
+      end
+    end
+    
+    #Sorting parameters - パラメータのソート
+    values = params.keys.sort.collect {|key|  [URI.escape(key,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), URI.escape(params[key].to_s,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))].join("=") }
+    param=values.join("&")
+    
+    #Creating Signature String - 電子署名の作成
+    signtemp = "GET"+"\n"+@@ENDPOINT_HOST+"\n"+@@ENDPOINT_URI+"\n"+param
+    signature_raw = Base64.encode64(OpenSSL::HMAC.digest('sha256',@secret_access_key,signtemp)).delete("\n")
+    signature=URI.escape(signature_raw,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+    
+    param+="&Signature="+signature
+    #Creating URL - URLの作成
+    url=@@ENDPOINT_SCHEME+@@ENDPOINT_HOST+@@ENDPOINT_URI+"?"+param
+    puts url
+    
+    
+    uri=URI.parse(url)
+    
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    
+    #performing HTTP access - HTTPアクセスを実行
+    request = Net::HTTP::Get.new(uri.request_uri)
+    response = http.request(request)
+    
+    #output results - 結果を出力
+    response.body
+  end
+
+  def do_inbound_shipment(shipment_id, header, items, action)
+    @@ENDPOINT_SCHEME='https://'
+    @@ENDPOINT_HOST='mws.amazonservices.jp' #Endpoint to JP MWS
+    @@ENDPOINT_URI='/FulfillmentInboundShipment/2010-10-01'
+    
+    params={
+      "AWSAccessKeyId"=>@access_key_id,
+      "MarketplaceId"=>@marketplace_id,
+      "SellerId"=>@merchant_id,
+      "SignatureMethod"=>"HmacSHA256",
+      "SignatureVersion"=>"2",
+      "Version"=>"2010-10-01",
+      "Timestamp"=>Time.now.utc.iso8601
+    }
+    
+    params["Action"]=action
+    
+    params["ShipmentId"] = shipment_id
+    
+    header.each do |key, value|
+      params["InboundShipmentHeader.#{key}"] = value
+    end
+    
+    items[:inbound_shipment_items].each_with_index do |item, index|
+      item.each do |key, value|
+        params["InboundShipmentItems.member.#{index+1}.#{key}"] = value
+      end
+    end
+    
+    #Sorting parameters - パラメータのソート
+    values = params.keys.sort.collect {|key|  [URI.escape(key,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), URI.escape(params[key].to_s,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))].join("=") }
+    param=values.join("&")
+    
+    #Creating Signature String - 電子署名の作成
+    signtemp = "GET"+"\n"+@@ENDPOINT_HOST+"\n"+@@ENDPOINT_URI+"\n"+param
+    signature_raw = Base64.encode64(OpenSSL::HMAC.digest('sha256',@secret_access_key,signtemp)).delete("\n")
+    signature=URI.escape(signature_raw,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+    
+    param+="&Signature="+signature
+    #Creating URL - URLの作成
+    url=@@ENDPOINT_SCHEME+@@ENDPOINT_HOST+@@ENDPOINT_URI+"?"+param
+    puts url
+    
+    
+    uri=URI.parse(url)
+    
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    
+    #performing HTTP access - HTTPアクセスを実行
+    request = Net::HTTP::Get.new(uri.request_uri)
+    response = http.request(request)
+    
+    #output results - 結果を出力
+    response.body
+  end
 end
