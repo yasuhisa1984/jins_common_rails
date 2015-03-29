@@ -431,6 +431,7 @@ class Amazon::MwsAdapter
     # res = get_inbound_shipment_client.create_inbound_shipment(shipment_id, inbound_shipment_header, opts)
     # Rails.logger.info res.data[:body]
     # info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
+
     Rails.logger.debug info.inspect
     info
   end
@@ -495,6 +496,9 @@ class Amazon::MwsAdapter
   # @option opts [Integer] :number_of_packages
   # @return [Peddler::XMLParser]
   def get_package_labels(shipment_id, page_type, opts = {})
+    # res = do_get_package_label(shipment_id, page_type, opts)
+    # Rails.logger.info res
+    # info = Amazon::MWS::TransportDocument.parse(res, :single => true, :use_default_namespace => true)
     res = get_inbound_shipment_client.get_package_labels(shipment_id, page_type, opts)
     Rails.logger.info res.data[:body]
     info = Amazon::MWS::TransportDocument.parse(res.data[:body], :single => true, :use_default_namespace => true)
@@ -582,7 +586,7 @@ class Amazon::MwsAdapter
         :aws_access_key_id => @access_key_id,
         :aws_secret_access_key => @secret_access_key
       )
-      @inbound_shipment_client.auth_token = @auth_token if @auth_token.present?
+      #@inbound_shipment_client.auth_token = @auth_token if @auth_token.present?
     end
     @inbound_shipment_client
   end
@@ -652,11 +656,14 @@ class Amazon::MwsAdapter
     request = Net::HTTP::Get.new(uri.request_uri)
     response = http.request(request)
     
+    Rails.logger.info "#{response}, #{response.body}"
     #output results - 結果を出力
     response.body
   end
 
   def do_inbound_shipment(shipment_id, header, items, action)
+    Rails.logger.info "action: #{action}, shipment_id: #{shipment_id}, header: #{header}, items: #{items}"
+
     @@ENDPOINT_SCHEME='https://'
     @@ENDPOINT_HOST='mws.amazonservices.jp' #Endpoint to JP MWS
     @@ENDPOINT_URI='/FulfillmentInboundShipment/2010-10-01'
@@ -676,7 +683,13 @@ class Amazon::MwsAdapter
     params["ShipmentId"] = shipment_id
     
     header.each do |key, value|
-      params["InboundShipmentHeader.#{key}"] = value
+      if value.instance_of?(Hash)
+        value.each do |ckey, cvalue|
+          params["InboundShipmentHeader.#{key}.#{ckey}"] = cvalue
+        end
+      else
+        params["InboundShipmentHeader.#{key}"] = value
+      end
     end
     
     items[:inbound_shipment_items].each_with_index do |item, index|
@@ -710,6 +723,58 @@ class Amazon::MwsAdapter
     request = Net::HTTP::Get.new(uri.request_uri)
     response = http.request(request)
     
+     Rails.logger.info "#{response}, #{response.body}"
+     #output results - 結果を出力
+    response.body
+  end
+  
+  def do_get_package_label(shipment_id, page_type, opt)
+    @@ENDPOINT_SCHEME='https://'
+    @@ENDPOINT_HOST='mws.amazonservices.jp' #Endpoint to JP MWS
+    @@ENDPOINT_URI='/FulfillmentInboundShipment/2010-10-01'
+    
+    params={
+      "AWSAccessKeyId"=>@access_key_id,
+      "MarketplaceId"=>@marketplace_id,
+      "SellerId"=>@merchant_id,
+      "SignatureMethod"=>"HmacSHA256",
+      "SignatureVersion"=>"2",
+      "Version"=>"2010-10-01",
+      "Timestamp"=>Time.now.utc.iso8601
+    }
+    
+    params["Action"]="GetPackageLabels"
+    
+    params["ShipmentId"] = shipment_id
+    params["PageType"] = page_type
+    params["NumberOfPackages"] = opt[:number_of_packages]
+        
+    #Sorting parameters - パラメータのソート
+    values = params.keys.sort.collect {|key|  [URI.escape(key,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), URI.escape(params[key].to_s,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))].join("=") }
+    param=values.join("&")
+    
+    #Creating Signature String - 電子署名の作成
+    signtemp = "GET"+"\n"+@@ENDPOINT_HOST+"\n"+@@ENDPOINT_URI+"\n"+param
+    signature_raw = Base64.encode64(OpenSSL::HMAC.digest('sha256',@secret_access_key,signtemp)).delete("\n")
+    signature=URI.escape(signature_raw,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+    
+    param+="&Signature="+signature
+    #Creating URL - URLの作成
+    url=@@ENDPOINT_SCHEME+@@ENDPOINT_HOST+@@ENDPOINT_URI+"?"+param
+    puts url
+    
+    
+    uri=URI.parse(url)
+    
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    
+    #performing HTTP access - HTTPアクセスを実行
+    request = Net::HTTP::Get.new(uri.request_uri)
+    response = http.request(request)
+    Rails.logger.info "#{response}, #{response.body}"
+     
     #output results - 結果を出力
     response.body
   end
