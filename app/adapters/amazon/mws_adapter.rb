@@ -586,7 +586,7 @@ class Amazon::MwsAdapter
         :aws_access_key_id => @access_key_id,
         :aws_secret_access_key => @secret_access_key
       )
-      #@inbound_shipment_client.auth_token = @auth_token if @auth_token.present?
+      @inbound_shipment_client.auth_token = @auth_token if @auth_token.present?
     end
     @inbound_shipment_client
   end
@@ -620,6 +620,7 @@ class Amazon::MwsAdapter
     }
     
     params["Action"]="CreateInboundShipmentPlan"
+    params["MWSAuthToken "] = @auth_token if @auth_token.present?
     
     address.each do |key, value|
       params["ShipFromAddress.#{key}"] = value
@@ -679,6 +680,7 @@ class Amazon::MwsAdapter
     }
     
     params["Action"]=action
+    params["MWSAuthToken "] = @auth_token if @auth_token.present?
     
     params["ShipmentId"] = shipment_id
     
@@ -744,6 +746,7 @@ class Amazon::MwsAdapter
     }
     
     params["Action"]="GetPackageLabels"
+    params["MWSAuthToken "] = @auth_token if @auth_token.present?
     
     params["ShipmentId"] = shipment_id
     params["PageType"] = page_type
