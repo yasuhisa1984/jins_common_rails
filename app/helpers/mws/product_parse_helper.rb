@@ -45,15 +45,18 @@ module Mws::ProductParseHelper
         :new_offers => offer_count["New"],
         :used_offers => offer_count["Used"],
         :collectible_offers => offer_count["Collectible"],
+        :refurbished_offers => offer_count["Refurbished"],
         :new_data => result_data["New"].present? ? result_data["New"].to_json : nil,
         :used_data => result_data["Used"].present? ? result_data["Used"].to_json : nil,
         :collectible_data => result_data["Collectible"].present? ? result_data["Collectible"].to_json : nil,
+        :refurbished_data => result_data["Refurbished"].present? ? result_data["Refurbished"].to_json : nil,
       }
       
       [
         {:condition => "New", :method => [:new_lowest=, :new_shipping=, :new_fba_lowest=]},
         {:condition => "Used", :method => [:used_lowest=, :used_shipping=, :used_fba_lowest=]},
-        {:condition => "Collectible", :method => [:collectible_lowest=, :collectible_shipping=, :collectible_fba_lowest=]}
+        {:condition => "Collectible", :method => [:collectible_lowest=, :collectible_shipping=, :collectible_fba_lowest=]},
+        {:condition => "Refurbished", :method => [:refurbished_lowest=, :refurbished_shipping=, :refurbished_fba_lowest=]}
       ].each do |defs|
         if result_data[defs[:condition]].present?
           condition = defs[:condition]
@@ -95,6 +98,8 @@ module Mws::ProductParseHelper
          key = :used_offers
         when "Collectible"
          key = :collectible_offers
+        when "Refurbished"
+         key = :refurbished_offers
         end
         
         offer[key] = listings.text.to_i if key.present?
