@@ -38,10 +38,13 @@ module Mws::ProductParseHelper
         end
       end
       
+      search_time = Time.now
+      
       offer = {
         :asin => asin,
         :market_place_id => market_place_id,
-        :target_date => Time.now.strftime("%Y%m%d"),
+        :target_date => search_time.strftime("%Y%m%d"),
+        :search_time => search_time,
         :new_offers => offer_count["New"],
         :used_offers => offer_count["Used"],
         :collectible_offers => offer_count["Collectible"],
