@@ -82,7 +82,7 @@ module Mws::ProductParseHelper
     competitive_pricing_doc = Nokogiri::XML(res.data[:body])
     competitive_pricing_doc.remove_namespaces!
     
-    puts competitive_pricing_doc
+    Rails.logger.debug competitive_pricing_doc.to_xml
     offers = []
     competitive_pricing_doc.xpath('//Product').each do |product|
       offer = {}
@@ -119,6 +119,28 @@ module Mws::ProductParseHelper
         end
         offer[:sales_rank] = sales_ranks.first[:rank]
         offer[:sales_ranks] = sales_ranks
+      end
+      
+      pricing_tags = product.xpath('.//CompetitivePrice')
+      
+      if pricing_tags.present?
+        pricing_tags.each do |pricing|
+          price_id = pricing.xpath('.//CompetitivePriceId').text
+          listing_price = pricing.xpath('.//ListingPrice/Amount').text.to_f
+          shipping = pricing.xpath('.//Shipping/Amount').text.to_f
+          Rails.logger.info "CompetitivePriceId:#{price_id}, price:#{listing_price}, shipping:#{shipping}"
+          
+          case price_id
+          when "1"
+            Rails.logger.info "CompetitivePriceId:1, price:#{listing_price}, shipping:#{shipping}"
+            offer[:new_cart_price] = listing_price
+            offer[:new_cart_shipping] = shipping
+          when "2"
+            Rails.logger.info "CompetitivePriceId:2"
+            offer[:used_cart_price] = listing_price
+            offer[:used_cart_shipping] = shipping
+          end
+        end
       end
       
       Rails.logger.debug offer
