@@ -118,7 +118,8 @@ module Mws::ProductParseHelper
           sales_ranks << {id: sales_rank.xpath('./ProductCategoryId').text, rank: sales_rank.xpath('./Rank').text.to_i}
         end
         offer[:sales_rank] = sales_ranks.first[:rank]
-        offer[:sales_ranks] = sales_ranks
+        offer[:rank_category_id] = sales_ranks.first[:id]
+        offer[:sales_ranks] = sales_ranks.to_json
       end
       
       pricing_tags = product.xpath('.//CompetitivePrice')
