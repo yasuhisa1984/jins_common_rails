@@ -85,54 +85,15 @@ module PaApi::ProductParseHelper
         entity.s_image_path = get_string_value(item, 'SmallImage/URL')
         entity.m_image_path = get_string_value(item, 'MediumImage/URL')
         entity.l_image_path = get_string_value(item, 'LargeImage/URL')
-    
-        # node_elems = item.get_elements('./BrowseNodes/BrowseNode')
-        # root_node_id = nil
-    #           
-        # if node_elems.blank?
-          # node_elems ||= []
-          # search_nodes = Amazon::Node.where(:search_index => entity.search_index)
-          # root_node_id = search_nodes.first.root_node_id if search_nodes.present?
-        # end
-    #           
-        # node_elems.each do |node_elem|
-          # has_ancester = true
-          # ancestor_node = node_elem
-          # while has_ancester do
-            # ancestor_node = ancestor_node.get_element('./Ancestors/BrowseNode')
-            # if ancestor_node.present? && ancestor_node.get_element('./IsCategoryRoot').present?
-              # has_ancester = false
-              # node_id = get_string_value(ancestor_node, './BrowseNodeId')
-              # ancester_node_id = get_string_value(ancestor_node, './Ancestors/BrowseNode/BrowseNodeId')
-              # ancester_node_name = get_string_value(ancestor_node, './Ancestors/BrowseNode/Name')
-    #     
-              # next if ancester_node_name.blank?
-    #     
-              # root_nodes << Amazon::Node.new(
-                # :node_id => ancester_node_id,
-                # :node_name => get_string_value(ancestor_node, './Ancestors/BrowseNode/Name'),
-                # :root_node_id => ancester_node_id,
-                # :search_index => entity.search_index,
-                # :result_count => 0,
-                # :active => 1,
-                # :level => 1
-              # )
-              # Amazon::Node.import root_nodes
-    #     
-              # if root_node_ids.include?(ancester_node_id)
-                # root_node_id = ancester_node_id
-                # Rails.logger.debug "At ancester layer. Root node id is #{root_node_id}."
-              # elsif root_node_ids.include?(node_id)
-                # root_node_id = node_id
-                # Rails.logger.debug "At same layer, Root node id is #{root_node_id}."
-              # else
-                # Rails.logger.debug "They are not root node id. #{node_id} / #{ancester_node_id}."
-              # end
-            # end
-            # has_ancester = false unless exists_elem?(ancestor_node, './Ancestors')
-          # end
-        # end
-        # entity.root_node_id = root_node_id
+
+        similar_elems = item.get_elements('SimilarProducts/SimilarProduct')
+        similar_elems ||= []
+        similar_asins = []
+        similar_elems.each do |similar_elem|
+          similar_asins <<  similar_elem.get('./ASIN')
+        end
+        item.similar_asins = similar_asins.join(',') if similar_asins.present?
+        
         entity.define_size
         entity.initialized = true
         entity.initialized_at = Time.now
