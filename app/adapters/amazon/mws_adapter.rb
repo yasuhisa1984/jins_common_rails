@@ -405,11 +405,11 @@ class Amazon::MwsAdapter
   # @option opts [String] :label_prep_preference
   # @return [Peddler::XMLParser]
   def create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items, opts = {})
-    res = do_create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items)
-    info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res, :single => true, :use_default_namespace => true)
+    # res = do_create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items)
+    # info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res, :single => true, :use_default_namespace => true)
+    res = get_inbound_shipment_client.create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items, opts)
+    info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res.data[:body], :single => true, :use_default_namespace => true)
     Rails.logger.info info
-    # res = get_inbound_shipment_client.create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items, opts)
-    # info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res.data[:body], :single => true, :use_default_namespace => true)
     plans = []
     info.plans.each{|plan| plans << plan if plan.shipment_id.present?}
     plans
@@ -425,12 +425,12 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser]
   def create_inbound_shipment(shipment_id, inbound_shipment_header, opts = {})
     # 暫定対応版
-    res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "CreateInboundShipment")
-    info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
+    # res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "CreateInboundShipment")
+    # info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
 
-    # res = get_inbound_shipment_client.create_inbound_shipment(shipment_id, inbound_shipment_header, opts)
-    # Rails.logger.info res.data[:body]
-    # info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
+    res = get_inbound_shipment_client.create_inbound_shipment(shipment_id, inbound_shipment_header, opts)
+    Rails.logger.info res.data[:body]
+    info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
 
     Rails.logger.debug info.inspect
     info
@@ -496,12 +496,12 @@ class Amazon::MwsAdapter
   # @option opts [Integer] :number_of_packages
   # @return [Peddler::XMLParser]
   def get_package_labels(shipment_id, page_type, opts = {})
-    # res = do_get_package_label(shipment_id, page_type, opts)
-    # Rails.logger.info res
-    # info = Amazon::MWS::TransportDocument.parse(res, :single => true, :use_default_namespace => true)
-    res = get_inbound_shipment_client.get_package_labels(shipment_id, page_type, opts)
-    Rails.logger.info res.data[:body]
-    info = Amazon::MWS::TransportDocument.parse(res.data[:body], :single => true, :use_default_namespace => true)
+    res = do_get_package_label(shipment_id, page_type, opts)
+    Rails.logger.info res
+    info = Amazon::MWS::TransportDocument.parse(res, :single => true, :use_default_namespace => true)
+    # res = get_inbound_shipment_client.get_package_labels(shipment_id, page_type, opts)
+    # Rails.logger.info res.data[:body]
+    # info = Amazon::MWS::TransportDocument.parse(res.data[:body], :single => true, :use_default_namespace => true)
   end
 
   # Lists the marketplaces the seller participates in
