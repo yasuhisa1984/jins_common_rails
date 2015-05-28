@@ -496,12 +496,12 @@ class Amazon::MwsAdapter
   # @option opts [Integer] :number_of_packages
   # @return [Peddler::XMLParser]
   def get_package_labels(shipment_id, page_type, opts = {})
-    res = do_get_package_label(shipment_id, page_type, opts)
-    Rails.logger.info res
-    info = Amazon::MWS::TransportDocument.parse(res, :single => true, :use_default_namespace => true)
-    # res = get_inbound_shipment_client.get_package_labels(shipment_id, page_type, opts)
-    # Rails.logger.info res.data[:body]
-    # info = Amazon::MWS::TransportDocument.parse(res.data[:body], :single => true, :use_default_namespace => true)
+    # res = do_get_package_label(shipment_id, page_type, opts)
+    # Rails.logger.info res
+    # info = Amazon::MWS::TransportDocument.parse(res, :single => true, :use_default_namespace => true)
+    res = get_inbound_shipment_client.get_package_labels(shipment_id, page_type, opts)
+    Rails.logger.info res.data[:body]
+    info = Amazon::MWS::TransportDocument.parse(res.data[:body], :single => true, :use_default_namespace => true)
   end
 
   # Lists the marketplaces the seller participates in
