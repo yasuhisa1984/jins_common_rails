@@ -42,7 +42,14 @@ class Amazon::MwsAdapter
   #   @option opts [String] :query_context_id
   # @return [Peddler::XMLParser]
   def list_matching_products(query, opts = {})
-    get_product_client.list_matching_products(query, opts)
+    begin
+      return get_product_client.list_matching_products(query, opts)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Lists products and their attributes, based on a list of ASIN, GCID,
@@ -56,7 +63,14 @@ class Amazon::MwsAdapter
   #   @option opts [String] :marketplace_id
   # @return [Peddler::XMLParser]
   def get_matching_product_for_id(id_type, id_list)
-    get_product_client.get_matching_product_for_id(id_type, *id_list)
+    begin
+      return get_product_client.get_matching_product_for_id(id_type, *id_list)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Lists products and their attributes, based on a list of ASIN values
@@ -68,7 +82,14 @@ class Amazon::MwsAdapter
   #   @option opts [String] :marketplace_id
   # @return [Peddler::XMLParser]
   def get_matching_product(asins)
-    get_product_client.get_matching_product(*asins)
+    begin
+      return get_product_client.get_matching_product(*asins)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets the current competitive price of a product, based on Seller SKU
@@ -80,7 +101,14 @@ class Amazon::MwsAdapter
   #   @option opts [String] :marketplace_id
   # @return [Peddler::XMLParser]
   def get_competitive_pricing_for_sku(skus)
-    get_product_client.get_competitive_pricing_for_sku(*skus)
+    begin
+      return get_product_client.get_competitive_pricing_for_sku(*skus)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets the current competitive price of a product, identified by its ASIN
@@ -92,7 +120,14 @@ class Amazon::MwsAdapter
   #   @option opts [String] :marketplace_id
   # @return [Peddler::XMLParser]
   def get_competitive_pricing_for_asin(asins)
-    get_product_client.get_competitive_pricing_for_asin(*asins)
+    begin
+      return get_product_client.get_competitive_pricing_for_asin(*asins)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets pricing information for the lowest-price active offer listings for
@@ -107,7 +142,14 @@ class Amazon::MwsAdapter
   #   @option opts [Boolean] :exclude_me
   # @return [Peddler::XMLParser]
   def get_lowest_offer_listings_for_sku(skus)
-    get_product_client.get_lowest_offer_listings_for_sku(*skus)
+    begin
+      return get_product_client.get_lowest_offer_listings_for_sku(*skus)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets pricing information for the lowest-price active offer listings for
@@ -122,7 +164,14 @@ class Amazon::MwsAdapter
   #   @option opts [Boolean] :exclude_me
   # @return [Peddler::XMLParser]
   def get_lowest_offer_listings_for_asin(asins)
-    get_product_client.get_lowest_offer_listings_for_asin(*asins)
+    begin
+      return get_product_client.get_lowest_offer_listings_for_asin(*asins)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets pricing information for seller's own offer listings, based on
@@ -136,7 +185,14 @@ class Amazon::MwsAdapter
   #   @option opts [String] :item_condition
   # @return [Peddler::XMLParser]
   def get_my_price_for_sku(skus)
-    get_product_client.get_my_price_for_sku(*skus)
+    begin
+      return get_product_client.get_my_price_for_sku(*skus)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets pricing information for seller's own offer listings, identified by
@@ -150,7 +206,14 @@ class Amazon::MwsAdapter
   #   @option opts [String] :item_condition
   # @return [Peddler::XMLParser]
   def get_my_price_for_asin(asins)
-    get_product_client.get_my_price_for_asin(*asins)
+    begin
+      return get_product_client.get_my_price_for_asin(*asins)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets parent product categories that a product belongs to, based on
@@ -163,7 +226,14 @@ class Amazon::MwsAdapter
   #   @option opts [String] :marketplace_id
   # @return [Peddler::XMLParser]
   def get_product_categories_for_sku(sku, opts = {})
-    get_product_client.get_product_categories_for_sku(sku, opts)
+    begin
+      return get_product_client.get_product_categories_for_sku(sku, opts)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets parent product categories that a product belongs to, based on ASIN
@@ -175,7 +245,14 @@ class Amazon::MwsAdapter
   #   @option opts [String] :marketplace_id
   # @return [Peddler::XMLParser]
   def get_product_categories_for_asin(asin, opts = {})
-    get_product_client.get_product_categories_for_asin(asin, opts)
+    begin
+      return get_product_client.get_product_categories_for_asin(asin, opts)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # ==== Feed API Section ====
@@ -192,10 +269,18 @@ class Amazon::MwsAdapter
   # @option opts [Boolean] :purge_and_replace
   # @return [Peddler::XMLParser]
   def submit_feed(feed_content, feed_type, opts = {})
-    res = get_feed_client.submit_feed(feed_content, feed_type, opts)
-    info = Amazon::MWS::Feed::SubmissionInfo.parse(
-    res.data[:body], :single => true, :use_default_namespace => true)
-    info
+    begin
+      res = get_feed_client.submit_feed(feed_content, feed_type, opts)
+      info = Amazon::MWS::Feed::SubmissionInfo.parse(
+      res.data[:body], :single => true, :use_default_namespace => true)
+      
+      return info
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # List feed submissions
@@ -211,8 +296,17 @@ class Amazon::MwsAdapter
   # @option opts [String, #iso8601] :submitted_to_date
   # @return [Peddler::XMLParser]Ï
   def get_feed_submission_list(opts = {})
-    res = get_feed_client.get_feed_submission_list(opts)
-    res_list = Amazon::MWS::Feed::SubmissionList.parse(res.data[:body], :single => true, :use_default_namespace => true)
+    begin
+      res = get_feed_client.get_feed_submission_list(opts)
+      res_list = Amazon::MWS::Feed::SubmissionList.parse(res.data[:body], :single => true, :use_default_namespace => true)
+      
+      return res_list
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets the processing report for a feed and its Content-MD5 header
@@ -222,7 +316,14 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser] if the report is in XML format
   # @return [Peddler::CSVParser] if the report is a flat file
   def get_feed_submission_result(feed_submission_id)
-    get_feed_client.get_feed_submission_result(feed_submission_id)
+    begin
+      return get_feed_client.get_feed_submission_result(feed_submission_id)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Creates a report request
@@ -236,10 +337,17 @@ class Amazon::MwsAdapter
   # @option opts [Array<String>, String] :marketplace_id
   # @return [Peddler::XMLParser]
   def request_report(report_type, opts = {})
-    res = get_report_client.request_report(report_type, opts)
-    info = Amazon::MWS::Report::ReportRequestInfo.parse(
-    res.data[:body], :single => true, :use_default_namespace => true)
-    info
+    begin
+      res = get_report_client.request_report(report_type, opts)
+      info = Amazon::MWS::Report::ReportRequestInfo.parse(
+      res.data[:body], :single => true, :use_default_namespace => true)
+      return info
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Lists report requests
@@ -254,7 +362,14 @@ class Amazon::MwsAdapter
   # @option opts [String, #iso8601] :requested_to_date
   # @return [Peddler::XMLParser]
   def get_report_request_list(opts = {})
-    get_report_client.get_report_request_list(opts)
+    begin
+      return get_report_client.get_report_request_list(opts)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Lists the next page of the report requests
@@ -263,7 +378,14 @@ class Amazon::MwsAdapter
   # @param next_token [String]
   # @return [Peddler::XMLParser]
   def get_report_request_list_by_next_token(next_token)
-    get_report_client.get_report_request_list_by_next_token next_token
+    begin
+      return get_report_client.get_report_request_list_by_next_token next_token
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Counts requested reports
@@ -276,7 +398,14 @@ class Amazon::MwsAdapter
   # @option opts [String, #iso8601] :requested_to_date
   # @return [Peddler::XMLParser]
   def get_report_request_count(opts = {})
-    get_report_client.get_report_request_count opts
+    begin
+      return get_report_client.get_report_request_count opts
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Cancels one or more report requests
@@ -289,7 +418,14 @@ class Amazon::MwsAdapter
   # @option opts [String, #iso8601] :requested_to_date
   # @return [Peddler::XMLParser]
   def cancel_report_requests(opts = {})
-    get_report_client.cancel_report_requests opts
+    begin
+      return get_report_client.cancel_report_requests opts
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Lists reports
@@ -304,7 +440,14 @@ class Amazon::MwsAdapter
   # @option opts [Array<String>, String] :report_request_id_list
   # @return [Peddler::XMLParser]
   def get_report_list(opts = {})
-    get_report_client.get_report_list opts
+    begin
+      return get_report_client.get_report_list opts
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Lists the next page of reports
@@ -313,7 +456,14 @@ class Amazon::MwsAdapter
   # @param next_token [String]
   # @return [Peddler::XMLParser]
   def get_report_list_by_next_token(next_token)
-    get_report_client.get_report_list_by_next_token next_token
+    begin
+      return get_report_client.get_report_list_by_next_token next_token
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Counts reports
@@ -326,7 +476,14 @@ class Amazon::MwsAdapter
   # @option opts [String, #iso8601] :available_to_date
   # @return [Peddler::XMLParser]
   def get_report_count(opts = {})
-    get_report_client.get_report_count opts
+    begin
+      return get_report_client.get_report_count opts
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets a report and its Content-MD5 header
@@ -336,8 +493,14 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser] if report is in XML format
   # @return [Peddler::CSVParser] if report is a flat file
   def get_report(report_id, &blk)
-    get_report_client.get_report(report_id)
-
+    begin
+      return get_report_client.get_report(report_id)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   # mws = MWS.new(
   # :aws_access_key_id => @access_key_id,
   # :secret_access_key => @secret_access_key,
@@ -356,7 +519,14 @@ class Amazon::MwsAdapter
   # @option opts [String, #iso8601] :schedule_date
   # @return [Peddler::XMLParser]
   def manage_report_schedule(report_type, schedule, opts = {})
-    get_report_client.manage_report_schedule(report_type, schedule, opts)
+    begin
+      return get_report_client.manage_report_schedule(report_type, schedule, opts)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # List scheduled reports
@@ -374,7 +544,14 @@ class Amazon::MwsAdapter
   # @param next_token [String]
   # @raise [NotImplementedError]
   def get_report_schedule_list_by_next_token(next_token)
-    get_report_client.get_report_schedule_list_by_next_token next_token
+    begin
+      return get_report_client.get_report_schedule_list_by_next_token next_token
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Count scheduled reports
@@ -383,7 +560,14 @@ class Amazon::MwsAdapter
   # @param report_type_list [Array<String>]
   # @return [Peddler::XMLParser]
   def get_report_schedule_count(*report_type_list)
-    get_report_client.get_report_schedule_count report_type_list
+    begin
+      return get_report_client.get_report_schedule_count report_type_list
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Update acknowledged status of one or more reports
@@ -393,7 +577,14 @@ class Amazon::MwsAdapter
   # @param report_id_list [Array<String>]
   # @return [Peddler::XMLParser]
   def update_report_acknowledgements(acknowledged, *report_id_list)
-    get_report_client.update_report_acknowledgements(acknowledged, report_id_list)
+    begin
+      return get_report_client.update_report_acknowledgements(acknowledged, report_id_list)
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Returns the information required to create an inbound shipment
@@ -405,14 +596,22 @@ class Amazon::MwsAdapter
   # @option opts [String] :label_prep_preference
   # @return [Peddler::XMLParser]
   def create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items, opts = {})
+    begin
+      res = get_inbound_shipment_client.create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items, opts)
+      info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res.data[:body], :single => true, :use_default_namespace => true)
+      Rails.logger.info info
+      plans = []
+      info.plans.each{|plan| plans << plan if plan.shipment_id.present?}
+      
+      return plans
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
     # res = do_create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items)
     # info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res, :single => true, :use_default_namespace => true)
-    res = get_inbound_shipment_client.create_inbound_shipment_plan(ship_from_address, inbound_shipment_plan_request_items, opts)
-    info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res.data[:body], :single => true, :use_default_namespace => true)
-    Rails.logger.info info
-    plans = []
-    info.plans.each{|plan| plans << plan if plan.shipment_id.present?}
-    plans
   end
 
   # Creates an inbound shipment
@@ -424,16 +623,22 @@ class Amazon::MwsAdapter
   # @option opts [Array<Struct, Hash>] :inbound_shipment_items
   # @return [Peddler::XMLParser]
   def create_inbound_shipment(shipment_id, inbound_shipment_header, opts = {})
+    begin
+      res = get_inbound_shipment_client.create_inbound_shipment(shipment_id, inbound_shipment_header, opts)
+      Rails.logger.info res.data[:body]
+      info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
+  
+      Rails.logger.debug info.inspect
+      return info
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
     # 暫定対応版
     # res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "CreateInboundShipment")
     # info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
-
-    res = get_inbound_shipment_client.create_inbound_shipment(shipment_id, inbound_shipment_header, opts)
-    Rails.logger.info res.data[:body]
-    info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
-
-    Rails.logger.debug info.inspect
-    info
   end
 
   # Updates an existing inbound shipment
@@ -445,15 +650,22 @@ class Amazon::MwsAdapter
   # @option opts [Array<Struct, Hash>] :inbound_shipment_items
   # @return [Peddler::XMLParser]
   def update_inbound_shipment(shipment_id, inbound_shipment_header, opts = {})
+    begin
+      res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "UpdateInboundShipment")
+      info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
+  
+      # res = get_inbound_shipment_client.update_inbound_shipment(shipment_id, inbound_shipment_header, opts)
+      # Rails.logger.info res.data[:body]
+      # info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
+      Rails.logger.debug info.inspect
+      return info
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
     # 暫定対応版
-    res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "UpdateInboundShipment")
-    info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
-
-    # res = get_inbound_shipment_client.update_inbound_shipment(shipment_id, inbound_shipment_header, opts)
-    # Rails.logger.info res.data[:body]
-    # info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
-    Rails.logger.debug info.inspect
-    info
   end
 
   # Returns a list of inbound shipments based on criteria that you specify
@@ -466,9 +678,16 @@ class Amazon::MwsAdapter
   # @option opts [String, #iso8601] :last_updated_before
   # @return [Peddler::XMLParser]
   def list_inbound_shipments(opts = {})
-    res = get_inbound_shipment_client.list_inbound_shipments(opts)
-    Rails.logger.info res.data[:body]
-    res.data[:body]
+    begin
+      res = get_inbound_shipment_client.list_inbound_shipments(opts)
+      Rails.logger.info res.data[:body]
+      return res.data[:body]
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Returns a list of items in a specified inbound shipment, or a list of
@@ -481,9 +700,16 @@ class Amazon::MwsAdapter
   # @option opts [String, #iso8601] :last_updated_before
   # @return [Peddler::XMLParser]
   def list_inbound_shipment_items(opts = {})
-    res = get_inbound_shipment_client.list_inbound_shipment_items(opts)
-    Rails.logger.info res.data[:body]
-    res.data[:body]
+    begin
+      res = get_inbound_shipment_client.list_inbound_shipment_items(opts)
+      Rails.logger.info res.data[:body]
+      return res.data[:body]
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Returns PDF document data for printing package labels for an inbound
@@ -496,12 +722,20 @@ class Amazon::MwsAdapter
   # @option opts [Integer] :number_of_packages
   # @return [Peddler::XMLParser]
   def get_package_labels(shipment_id, page_type, opts = {})
+    begin
+      res = get_inbound_shipment_client.get_package_labels(shipment_id, page_type, opts)
+      Rails.logger.info res.data[:body]
+      info = Amazon::MWS::TransportDocument.parse(res.data[:body], :single => true, :use_default_namespace => true)
+      return info
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
     # res = do_get_package_label(shipment_id, page_type, opts)
     # Rails.logger.info res
     # info = Amazon::MWS::TransportDocument.parse(res, :single => true, :use_default_namespace => true)
-    res = get_inbound_shipment_client.get_package_labels(shipment_id, page_type, opts)
-    Rails.logger.info res.data[:body]
-    info = Amazon::MWS::TransportDocument.parse(res.data[:body], :single => true, :use_default_namespace => true)
   end
 
   # Lists the marketplaces the seller participates in
@@ -510,9 +744,17 @@ class Amazon::MwsAdapter
   # @param next_token [String]
   # @return [Peddler::XMLParser]
   def list_marketplace_participations
-    res = get_sellers_client.list_marketplace_participations
-    Rails.logger.info res.data[:body]
-    res.data[:body]
+    begin
+      res = get_sellers_client.list_marketplace_participations
+      Rails.logger.info res.data[:body]
+      
+      return res.data[:body]
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Lists the next page of marketplaces the seller participates in
@@ -521,9 +763,16 @@ class Amazon::MwsAdapter
   # @param next_token [String]
   # @return [Peddler::XMLParser]
   def list_marketplace_participations_by_next_token(next_token)
-    res = get_sellers_client.list_marketplace_participations_by_next_token next_token
-    Rails.logger.info res.data[:body]
-    res.data[:body]
+    begin
+      res = get_sellers_client.list_marketplace_participations_by_next_token next_token
+      Rails.logger.info res.data[:body]
+      return res.data[:body]
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
 
   # Gets the MWS Auth Token of the seller account
@@ -531,10 +780,18 @@ class Amazon::MwsAdapter
   # @see http://docs.developer.amazonservices.com/en_US/auth_token/AuthToken_GetAuthToken.html
   # @return [Peddler::XMLParser]
   def get_auth_token
-    res = get_sellers_client.get_auth_token
-    Rails.logger.info res.data[:body]
-    doc = REXML::Document.new(res.data[:body])
-    doc.elements['GetAuthTokenResponse/GetAuthTokenResult/MWSAuthToken'].text
+    begin
+      res = get_sellers_client.get_auth_token
+      Rails.logger.info res.data[:body]
+      doc = REXML::Document.new(res.data[:body])
+      
+      return doc.elements['GetAuthTokenResponse/GetAuthTokenResult/MWSAuthToken'].text
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
   end
   
   private
