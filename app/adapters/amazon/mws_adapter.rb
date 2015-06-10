@@ -651,12 +651,12 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser]
   def update_inbound_shipment(shipment_id, inbound_shipment_header, opts = {})
     begin
-      res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "UpdateInboundShipment")
-      info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
+      # res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "UpdateInboundShipment")
+      # info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
   
-      # res = get_inbound_shipment_client.update_inbound_shipment(shipment_id, inbound_shipment_header, opts)
-      # Rails.logger.info res.data[:body]
-      # info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
+      res = get_inbound_shipment_client.update_inbound_shipment(shipment_id, inbound_shipment_header, opts)
+      Rails.logger.info res.data[:body]
+      info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
       Rails.logger.debug info.inspect
       return info
     rescue => e
