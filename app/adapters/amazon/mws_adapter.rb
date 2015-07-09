@@ -9,6 +9,7 @@ require "net/https"
 
 class Amazon::MwsAdapter
   attr_accessor :country
+
   def initialize(opt={})
     @country = "jp"
     @marketplace_id = opt[:marketplace_id]
@@ -23,10 +24,10 @@ class Amazon::MwsAdapter
     begin
       self.get_report_request_count
     rescue
-    #例外が起きた場合の処理
+      #例外が起きた場合の処理
     else
-    #例外が発生しなかった場合の処理
-    ret = true
+      #例外が発生しなかった場合の処理
+      ret = true
     end
   end
 
@@ -272,8 +273,8 @@ class Amazon::MwsAdapter
     begin
       res = get_feed_client.submit_feed(feed_content, feed_type, opts)
       info = Amazon::MWS::Feed::SubmissionInfo.parse(
-      res.data[:body], :single => true, :use_default_namespace => true)
-      
+          res.data[:body], :single => true, :use_default_namespace => true)
+
       return info
     rescue => e
       if e.response.present?
@@ -299,7 +300,7 @@ class Amazon::MwsAdapter
     begin
       res = get_feed_client.get_feed_submission_list(opts)
       res_list = Amazon::MWS::Feed::SubmissionList.parse(res.data[:body], :single => true, :use_default_namespace => true)
-      
+
       return res_list
     rescue => e
       if e.response.present?
@@ -340,7 +341,7 @@ class Amazon::MwsAdapter
     begin
       res = get_report_client.request_report(report_type, opts)
       info = Amazon::MWS::Report::ReportRequestInfo.parse(
-      res.data[:body], :single => true, :use_default_namespace => true)
+          res.data[:body], :single => true, :use_default_namespace => true)
       return info
     rescue => e
       if e.response.present?
@@ -501,13 +502,13 @@ class Amazon::MwsAdapter
       end
       raise e
     end
-  # mws = MWS.new(
-  # :aws_access_key_id => @access_key_id,
-  # :secret_access_key => @secret_access_key,
-  # :seller_id => @merchant_id,
-  # :marketplace_id => @marketplace_id
-  # )
-  # mws.reports.get_report :report_id => report_id
+    # mws = MWS.new(
+    # :aws_access_key_id => @access_key_id,
+    # :secret_access_key => @secret_access_key,
+    # :seller_id => @merchant_id,
+    # :marketplace_id => @marketplace_id
+    # )
+    # mws.reports.get_report :report_id => report_id
   end
 
   # Creates, updates, or deletes a report request schedule
@@ -601,8 +602,8 @@ class Amazon::MwsAdapter
       info = Amazon::MWS::FullfillmentInbound::ShipmentPlanList.parse(res.data[:body], :single => true, :use_default_namespace => true)
       Rails.logger.info info
       plans = []
-      info.plans.each{|plan| plans << plan if plan.shipment_id.present?}
-      
+      info.plans.each { |plan| plans << plan if plan.shipment_id.present? }
+
       return plans
     rescue => e
       if e.response.present?
@@ -627,7 +628,7 @@ class Amazon::MwsAdapter
       res = get_inbound_shipment_client.create_inbound_shipment(shipment_id, inbound_shipment_header, opts)
       Rails.logger.info res.data[:body]
       info = Amazon::MWS::FullfillmentInbound::CreateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
-  
+
       Rails.logger.debug info.inspect
       return info
     rescue => e
@@ -653,7 +654,7 @@ class Amazon::MwsAdapter
     begin
       # res = do_inbound_shipment(shipment_id, inbound_shipment_header, opts, "UpdateInboundShipment")
       # info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res, :single => true, :use_default_namespace => true)
-  
+
       res = get_inbound_shipment_client.update_inbound_shipment(shipment_id, inbound_shipment_header, opts)
       Rails.logger.info res.data[:body]
       info = Amazon::MWS::FullfillmentInbound::UpdateShipmentResult.parse(res.data[:body], :single => true, :use_default_namespace => true)
@@ -747,7 +748,7 @@ class Amazon::MwsAdapter
     begin
       res = get_sellers_client.list_marketplace_participations
       Rails.logger.info res.data[:body]
-      
+
       return res.data[:body]
     rescue => e
       if e.response.present?
@@ -775,6 +776,115 @@ class Amazon::MwsAdapter
     end
   end
 
+  # Lists orders
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/orders/2013-09-01/Orders_ListOrders.html
+  # @param opts [Hash]
+  # @option opts [String, #iso8601] :created_after
+  # @option opts [String, #iso8601] :created_before
+  # @option opts [String, #iso8601] :last_updated_after
+  # @option opts [String, #iso8601] :last_updated_before
+  # @option opts [Array<String>, String] :order_status
+  # @option opts [Array<String>, String] :marketplace_id
+  # @option opts [Array<String>, String] :fulfillment_channel
+  # @option opts [Array<String>, String] :payment_method
+  # @option opts [String] :buyer_email
+  # @option opts [String] :seller_order_id
+  # @option opts [String] :max_results_per_page
+  # @option opts [String] :tfm_shipment_status
+  # @return [Peddler::XMLParser]
+  # rubocop:disable MethodLength
+  def list_orders(opts = {})
+    begin
+      res = get_order_client.list_orders(opts)
+      Rails.logger.info res.data[:body]
+
+      return res.data[:body]
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
+  end
+
+  # Lists the next page of orders
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/orders/2013-09-01/Orders_ListOrdersByNextToken.html
+  # @param next_token [String]
+  # @return [Peddler::XMLParser]
+  def list_orders_by_next_token(next_token)
+    begin
+      res = get_order_client.list_orders_by_next_token(next_token)
+      Rails.logger.info res.data[:body]
+
+      return res.data[:body]
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
+  end
+
+  # Gets one or more orders
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/orders/2013-09-01/Orders_GetOrder.html
+  # @param amazon_order_ids [Array<String>]
+  # @return [Peddler::XMLParser]
+  def get_order(*amazon_order_ids)
+    begin
+      res = get_order_client.get_order(*amazon_order_ids)
+      Rails.logger.info res.data[:body]
+
+      return res.data[:body]
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
+  end
+
+  # Lists order items for an order
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/orders/2013-09-01/Orders_ListOrderItems.html
+  # @param amazon_order_id [String]
+  # @return [Peddler::XMLParser]
+  def list_order_items(amazon_order_id)
+    begin
+      res = get_order_client.list_order_items(amazon_order_id)
+      Rails.logger.info res.data[:body]
+
+      return res.data[:body]
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
+  end
+
+  # Lists the next page of order items for an order
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/orders/2013-09-01/Orders_ListOrderItemsByNextToken.html
+  # @param next_token [String]
+  # @return [Peddler::XMLParser]
+  def list_order_items_by_next_token(next_token)
+    begin
+      res = get_order_client.list_order_items_by_next_token(next_token)
+      Rails.logger.info res.data[:body]
+
+      return res.data[:body]
+    rescue => e
+      if e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
+  end
+
+
   # Gets the MWS Auth Token of the seller account
   #
   # @see http://docs.developer.amazonservices.com/en_US/auth_token/AuthToken_GetAuthToken.html
@@ -784,7 +894,7 @@ class Amazon::MwsAdapter
       res = get_sellers_client.get_auth_token
       Rails.logger.info res.data[:body]
       doc = REXML::Document.new(res.data[:body])
-      
+
       return doc.elements['GetAuthTokenResponse/GetAuthTokenResult/MWSAuthToken'].text
     rescue => e
       if e.response.present?
@@ -793,16 +903,16 @@ class Amazon::MwsAdapter
       raise e
     end
   end
-  
+
   private
 
   def get_product_client
     if @product_client.blank?
       @product_client = MWS.products(
-        :marketplace_id => @marketplace_id,
-        :merchant_id => @merchant_id,
-        :aws_access_key_id => @access_key_id,
-        :aws_secret_access_key => @secret_access_key
+          :marketplace_id => @marketplace_id,
+          :merchant_id => @merchant_id,
+          :aws_access_key_id => @access_key_id,
+          :aws_secret_access_key => @secret_access_key
       )
       @product_client.auth_token = @auth_token if @auth_token.present?
     end
@@ -812,10 +922,10 @@ class Amazon::MwsAdapter
   def get_feed_client
     if @feed_client.blank?
       @feed_client = MWS.feeds(
-        :marketplace_id => @marketplace_id,
-        :merchant_id => @merchant_id,
-        :aws_access_key_id => @access_key_id,
-        :aws_secret_access_key => @secret_access_key
+          :marketplace_id => @marketplace_id,
+          :merchant_id => @merchant_id,
+          :aws_access_key_id => @access_key_id,
+          :aws_secret_access_key => @secret_access_key
       )
       @feed_client.auth_token = @auth_token if @auth_token.present?
     end
@@ -825,23 +935,36 @@ class Amazon::MwsAdapter
   def get_report_client
     if @report_client.blank?
       @report_client = MWS.reports(
-        :marketplace_id => @marketplace_id,
-        :merchant_id => @merchant_id,
-        :aws_access_key_id => @access_key_id,
-        :aws_secret_access_key => @secret_access_key
+          :marketplace_id => @marketplace_id,
+          :merchant_id => @merchant_id,
+          :aws_access_key_id => @access_key_id,
+          :aws_secret_access_key => @secret_access_key
       )
       @report_client.auth_token = @auth_token if @auth_token.present?
     end
     @report_client
   end
 
+  def get_order_client
+    if @order_client.blank?
+      @order_client = MWS.reports(
+          :marketplace_id => @marketplace_id,
+          :merchant_id => @merchant_id,
+          :aws_access_key_id => @access_key_id,
+          :aws_secret_access_key => @secret_access_key
+      )
+      @report_client.auth_token = @auth_token if @auth_token.present?
+    end
+    @order_client
+  end
+
   def get_inbound_shipment_client
     if @inbound_shipment_client.blank?
       @inbound_shipment_client = MWS.fulfillment_inbound_shipment(
-        :marketplace_id => @marketplace_id,
-        :merchant_id => @merchant_id,
-        :aws_access_key_id => @access_key_id,
-        :aws_secret_access_key => @secret_access_key
+          :marketplace_id => @marketplace_id,
+          :merchant_id => @merchant_id,
+          :aws_access_key_id => @access_key_id,
+          :aws_secret_access_key => @secret_access_key
       )
       @inbound_shipment_client.auth_token = @auth_token if @auth_token.present?
     end
@@ -851,10 +974,10 @@ class Amazon::MwsAdapter
   def get_sellers_client
     if @sellers_client.blank?
       @sellers_client = MWS.sellers(
-        :marketplace_id => @marketplace_id,
-        :merchant_id => @merchant_id,
-        :aws_access_key_id => @access_key_id,
-        :aws_secret_access_key => @secret_access_key
+          :marketplace_id => @marketplace_id,
+          :merchant_id => @merchant_id,
+          :aws_access_key_id => @access_key_id,
+          :aws_secret_access_key => @secret_access_key
       )
       @sellers_client.auth_token = @auth_token if @auth_token.present?
     end
@@ -865,55 +988,55 @@ class Amazon::MwsAdapter
     @@ENDPOINT_SCHEME='https://'
     @@ENDPOINT_HOST='mws.amazonservices.jp' #Endpoint to JP MWS
     @@ENDPOINT_URI='/FulfillmentInboundShipment/2010-10-01'
-    
+
     params={
-      "AWSAccessKeyId"=>@access_key_id,
-      "MarketplaceId"=>@marketplace_id,
-      "SellerId"=>@merchant_id,
-      "SignatureMethod"=>"HmacSHA256",
-      "SignatureVersion"=>"2",
-      "Version"=>"2010-10-01",
-      "Timestamp"=>Time.now.utc.iso8601
+        "AWSAccessKeyId" => @access_key_id,
+        "MarketplaceId" => @marketplace_id,
+        "SellerId" => @merchant_id,
+        "SignatureMethod" => "HmacSHA256",
+        "SignatureVersion" => "2",
+        "Version" => "2010-10-01",
+        "Timestamp" => Time.now.utc.iso8601
     }
-    
+
     params["Action"]="CreateInboundShipmentPlan"
     params["MWSAuthToken "] = @auth_token if @auth_token.present?
-    
+
     address.each do |key, value|
       params["ShipFromAddress.#{key}"] = value
     end
-    
+
     items.each_with_index do |item, index|
       item.each do |key, value|
         params["InboundShipmentPlanRequestItems.member.#{index+1}.#{key}"] = value
       end
     end
-    
+
     #Sorting parameters - パラメータのソート
-    values = params.keys.sort.collect {|key|  [URI.escape(key,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), URI.escape(params[key].to_s,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))].join("=") }
+    values = params.keys.sort.collect { |key| [URI.escape(key, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), URI.escape(params[key].to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))].join("=") }
     param=values.join("&")
-    
+
     #Creating Signature String - 電子署名の作成
     signtemp = "GET"+"\n"+@@ENDPOINT_HOST+"\n"+@@ENDPOINT_URI+"\n"+param
-    signature_raw = Base64.encode64(OpenSSL::HMAC.digest('sha256',@secret_access_key,signtemp)).delete("\n")
-    signature=URI.escape(signature_raw,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
-    
+    signature_raw = Base64.encode64(OpenSSL::HMAC.digest('sha256', @secret_access_key, signtemp)).delete("\n")
+    signature=URI.escape(signature_raw, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+
     param+="&Signature="+signature
     #Creating URL - URLの作成
     url=@@ENDPOINT_SCHEME+@@ENDPOINT_HOST+@@ENDPOINT_URI+"?"+param
     puts url
-    
-    
+
+
     uri=URI.parse(url)
-    
+
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    
+
     #performing HTTP access - HTTPアクセスを実行
     request = Net::HTTP::Get.new(uri.request_uri)
     response = http.request(request)
-    
+
     Rails.logger.info "#{response}, #{response.body}"
     #output results - 結果を出力
     response.body
@@ -925,22 +1048,22 @@ class Amazon::MwsAdapter
     @@ENDPOINT_SCHEME='https://'
     @@ENDPOINT_HOST='mws.amazonservices.jp' #Endpoint to JP MWS
     @@ENDPOINT_URI='/FulfillmentInboundShipment/2010-10-01'
-    
+
     params={
-      "AWSAccessKeyId"=>@access_key_id,
-      "MarketplaceId"=>@marketplace_id,
-      "SellerId"=>@merchant_id,
-      "SignatureMethod"=>"HmacSHA256",
-      "SignatureVersion"=>"2",
-      "Version"=>"2010-10-01",
-      "Timestamp"=>Time.now.utc.iso8601
+        "AWSAccessKeyId" => @access_key_id,
+        "MarketplaceId" => @marketplace_id,
+        "SellerId" => @merchant_id,
+        "SignatureMethod" => "HmacSHA256",
+        "SignatureVersion" => "2",
+        "Version" => "2010-10-01",
+        "Timestamp" => Time.now.utc.iso8601
     }
-    
+
     params["Action"]=action
     params["MWSAuthToken "] = @auth_token if @auth_token.present?
-    
+
     params["ShipmentId"] = shipment_id
-    
+
     header.each do |key, value|
       if value.instance_of?(Hash)
         value.each do |ckey, cvalue|
@@ -950,91 +1073,91 @@ class Amazon::MwsAdapter
         params["InboundShipmentHeader.#{key}"] = value
       end
     end
-    
+
     items[:inbound_shipment_items].each_with_index do |item, index|
       item.each do |key, value|
         params["InboundShipmentItems.member.#{index+1}.#{key}"] = value
       end
     end
-    
+
     #Sorting parameters - パラメータのソート
-    values = params.keys.sort.collect {|key|  [URI.escape(key,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), URI.escape(params[key].to_s,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))].join("=") }
+    values = params.keys.sort.collect { |key| [URI.escape(key, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), URI.escape(params[key].to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))].join("=") }
     param=values.join("&")
-    
+
     #Creating Signature String - 電子署名の作成
     signtemp = "GET"+"\n"+@@ENDPOINT_HOST+"\n"+@@ENDPOINT_URI+"\n"+param
-    signature_raw = Base64.encode64(OpenSSL::HMAC.digest('sha256',@secret_access_key,signtemp)).delete("\n")
-    signature=URI.escape(signature_raw,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
-    
+    signature_raw = Base64.encode64(OpenSSL::HMAC.digest('sha256', @secret_access_key, signtemp)).delete("\n")
+    signature=URI.escape(signature_raw, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+
     param+="&Signature="+signature
     #Creating URL - URLの作成
     url=@@ENDPOINT_SCHEME+@@ENDPOINT_HOST+@@ENDPOINT_URI+"?"+param
     puts url
-    
-    
+
+
     uri=URI.parse(url)
-    
+
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    
+
     #performing HTTP access - HTTPアクセスを実行
     request = Net::HTTP::Get.new(uri.request_uri)
     response = http.request(request)
-    
-     Rails.logger.info "#{response}, #{response.body}"
-     #output results - 結果を出力
+
+    Rails.logger.info "#{response}, #{response.body}"
+    #output results - 結果を出力
     response.body
   end
-  
+
   def do_get_package_label(shipment_id, page_type, opt)
     @@ENDPOINT_SCHEME='https://'
     @@ENDPOINT_HOST='mws.amazonservices.jp' #Endpoint to JP MWS
     @@ENDPOINT_URI='/FulfillmentInboundShipment/2010-10-01'
-    
+
     params={
-      "AWSAccessKeyId"=>@access_key_id,
-      "MarketplaceId"=>@marketplace_id,
-      "SellerId"=>@merchant_id,
-      "SignatureMethod"=>"HmacSHA256",
-      "SignatureVersion"=>"2",
-      "Version"=>"2010-10-01",
-      "Timestamp"=>Time.now.utc.iso8601
+        "AWSAccessKeyId" => @access_key_id,
+        "MarketplaceId" => @marketplace_id,
+        "SellerId" => @merchant_id,
+        "SignatureMethod" => "HmacSHA256",
+        "SignatureVersion" => "2",
+        "Version" => "2010-10-01",
+        "Timestamp" => Time.now.utc.iso8601
     }
-    
+
     params["Action"]="GetPackageLabels"
     params["MWSAuthToken "] = @auth_token if @auth_token.present?
-    
+
     params["ShipmentId"] = shipment_id
     params["PageType"] = page_type
     params["NumberOfPackages"] = opt[:number_of_packages]
-        
+
     #Sorting parameters - パラメータのソート
-    values = params.keys.sort.collect {|key|  [URI.escape(key,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), URI.escape(params[key].to_s,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))].join("=") }
+    values = params.keys.sort.collect { |key| [URI.escape(key, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")), URI.escape(params[key].to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))].join("=") }
     param=values.join("&")
-    
+
     #Creating Signature String - 電子署名の作成
     signtemp = "GET"+"\n"+@@ENDPOINT_HOST+"\n"+@@ENDPOINT_URI+"\n"+param
-    signature_raw = Base64.encode64(OpenSSL::HMAC.digest('sha256',@secret_access_key,signtemp)).delete("\n")
-    signature=URI.escape(signature_raw,Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
-    
+    signature_raw = Base64.encode64(OpenSSL::HMAC.digest('sha256', @secret_access_key, signtemp)).delete("\n")
+    signature=URI.escape(signature_raw, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+
     param+="&Signature="+signature
     #Creating URL - URLの作成
     url=@@ENDPOINT_SCHEME+@@ENDPOINT_HOST+@@ENDPOINT_URI+"?"+param
     puts url
-    
-    
+
+
     uri=URI.parse(url)
-    
+
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-    
+
     #performing HTTP access - HTTPアクセスを実行
     request = Net::HTTP::Get.new(uri.request_uri)
     response = http.request(request)
     Rails.logger.info "#{response}, #{response.body}"
-     
+
     #output results - 結果を出力
     response.body
   end
