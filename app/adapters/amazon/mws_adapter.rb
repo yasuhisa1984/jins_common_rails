@@ -801,7 +801,7 @@ class Amazon::MwsAdapter
 
       return res.data[:body]
     rescue => e
-      if e.response.present?
+      if e.respond_to?(:response) && e.response.present?
         Rails.logger.error e.response.body
       end
       raise e
@@ -820,7 +820,7 @@ class Amazon::MwsAdapter
 
       return res.data[:body]
     rescue => e
-      if e.response.present?
+      if e.respond_to?(:response) && e.response.present?
         Rails.logger.error e.response.body
       end
       raise e
@@ -839,7 +839,7 @@ class Amazon::MwsAdapter
 
       return res.data[:body]
     rescue => e
-      if e.response.present?
+      if e.respond_to?(:response) && e.response.present?
         Rails.logger.error e.response.body
       end
       raise e
@@ -858,7 +858,7 @@ class Amazon::MwsAdapter
 
       return res.data[:body]
     rescue => e
-      if e.response.present?
+      if e.respond_to?(:response) && e.response.present?
         Rails.logger.error e.response.body
       end
       raise e
@@ -877,7 +877,7 @@ class Amazon::MwsAdapter
 
       return res.data[:body]
     rescue => e
-      if e.response.present?
+      if e.respond_to?(:response) && e.response.present?
         Rails.logger.error e.response.body
       end
       raise e
@@ -897,7 +897,7 @@ class Amazon::MwsAdapter
 
       return doc.elements['GetAuthTokenResponse/GetAuthTokenResult/MWSAuthToken'].text
     rescue => e
-      if e.response.present?
+      if e.respond_to?(:response) && e.response.present?
         Rails.logger.error e.response.body
       end
       raise e
