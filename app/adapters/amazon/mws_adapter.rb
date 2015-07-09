@@ -953,7 +953,7 @@ class Amazon::MwsAdapter
           :aws_access_key_id => @access_key_id,
           :aws_secret_access_key => @secret_access_key
       )
-      @report_client.auth_token = @auth_token if @auth_token.present?
+      @order_client.auth_token = @auth_token if @auth_token.present?
     end
     @order_client
   end
