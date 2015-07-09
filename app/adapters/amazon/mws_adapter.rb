@@ -46,7 +46,7 @@ class Amazon::MwsAdapter
     begin
       return get_product_client.list_matching_products(query, opts)
     rescue => e
-      if e.response.present?
+      if e.respond_to?(:response) && e.response.present?
         Rails.logger.error e.response.body
       end
       raise e
@@ -67,7 +67,7 @@ class Amazon::MwsAdapter
     begin
       return get_product_client.get_matching_product_for_id(id_type, *id_list)
     rescue => e
-      if e.response.present?
+      if e.respond_to?(:response) && e.response.present?
         Rails.logger.error e.response.body
       end
       raise e
@@ -86,7 +86,7 @@ class Amazon::MwsAdapter
     begin
       return get_product_client.get_matching_product(*asins)
     rescue => e
-      if e.response.present?
+      if e.respond_to?(:response) && e.response.present?
         Rails.logger.error e.response.body
       end
       raise e
@@ -947,7 +947,7 @@ class Amazon::MwsAdapter
 
   def get_order_client
     if @order_client.blank?
-      @order_client = MWS.reports(
+      @order_client = MWS.orders(
           :marketplace_id => @marketplace_id,
           :merchant_id => @merchant_id,
           :aws_access_key_id => @access_key_id,
