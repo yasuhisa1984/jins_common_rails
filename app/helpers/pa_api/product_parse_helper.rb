@@ -37,9 +37,6 @@ module PaApi::ProductParseHelper
     end
     
     def self.parse_to_entity(res, market_place_id)
-      # root_node_ids = Amazon::Node.uniq_root_node_ids
-      # Rails.logger.debug "Root node ids = #{root_node_ids}"
-      
       entities = []
       root_nodes = []
       res.items.each do |item|
@@ -49,17 +46,36 @@ module PaApi::ProductParseHelper
           :asin => item.get('ASIN'),
           :market_place_id => market_place_id
         )
+        detail = self.get_detail_class.new(
+            :item_id => item.get('ASIN'),
+            :market_place_id => market_place_id
+        )
+
         Rails.logger.debug item.get('ASIN')
         attr_elem = item.get_element('./ItemAttributes')
+
+        features = []
         if attr_elem.present?
-          # entity.title = attr_elem.get_element('./Title').get
-          entity.item_name = get_string_value(attr_elem, './Title')[0, 254]
+          # 商品名
+          entity.item_name = get_string_value(attr_elem, './Title')[0, 254] # 254文字に短縮
           # unescape html < > & " '
+          # HTMLエスケープを解除
           entity.item_name = CGI.unescapeHTML entity.item_name if entity.item_name.present?
-          
-          entity.ean = get_string_value(attr_elem, './EAN') 
-          entity.product_code = get_string_value(attr_elem, './Model', './SeikodoProductCode') 
-    
+          # EANコード
+          entity.ean = get_string_value(attr_elem, './EAN')
+          # 型番
+          entity.product_code = get_string_value(attr_elem, './SeikodoProductCode', './Model', './MPN')
+
+          # 発売日
+          entity.on_sale_date = get_time_value(attr_elem, './ReleaseDate', './PublicationDate')
+          # 製品グループ
+          entity.search_index = get_string_value(attr_elem, './ProductGroup')
+          # 内容物数
+          entity.package_quantity = get_int_value(attr_elem, './NumberOfDiscs', './PackageQuantity')
+          # メーカー希望小売価格
+          entity.fixed_price = get_int_value(attr_elem, './ListPrice/Amount')
+
+          # 商品包装サイズを収集
           if exists_elem?(attr_elem, './PackageDimensions')
             dimention_elem = attr_elem.get_element('./PackageDimensions')
             entity.height = get_float_value(dimention_elem, './Height')
@@ -72,28 +88,75 @@ module PaApi::ProductParseHelper
               entity.weight_units = get_string_value(dimention_elem, './Weight/@Units')
             end
           end
-        end
-        
-        entity.on_sale_date = get_time_value(attr_elem, './ReleaseDate', './PublicationDate')
-    
-        entity.search_index = get_string_value(attr_elem, './ProductGroup')
-    
-        entity.package_quantity = get_int_value(attr_elem, './NumberOfDiscs', './PackageQuantity')
-        
-        entity.fixed_price = get_int_value(attr_elem, './ListPrice/Amount')
-        
-        entity.s_image_path = get_string_value(item, 'SmallImage/URL')
-        entity.m_image_path = get_string_value(item, 'MediumImage/URL')
-        entity.l_image_path = get_string_value(item, 'LargeImage/URL')
 
-        similar_elems = item.get_elements('SimilarProducts/SimilarProduct')
-        similar_elems ||= []
+          # 製品仕様
+          feature_elems = attr_elem.get_elements('./Feature')
+          feature_elems ||= []
+          feature_elems.each do |feature|
+            features << get_string_value(feature, './')
+          end
+        end
+
+        # メイン画像URL
+        entity.s_image_path = get_string_value(item, 'SmallImage/URL') if exists_elem?(item, 'SmallImage')
+        entity.m_image_path = get_string_value(item, 'MediumImage/URL') if exists_elem?(item, 'MediumImage')
+        entity.l_image_path = get_string_value(item, 'LargeImage/URL') if exists_elem?(item, 'LargeImage')
+
+        # サブ画像URL
+        image_urls = []
+        if exists_elem?(item, 'ImageSets')
+          imageset_elems = item.get_elements('ImageSets/SimilarProduct')
+          imageset_elems ||= []
+          imageset_elems.each do |imageset_elem|
+            if get_string_value(imageset_elem, './@Category') == "variant"
+              image_urls << {
+                  small: get_string_value(imageset_elem, './SmallImage/URL'),
+                  medium: get_string_value(imageset_elem, './MediumImage/URL'),
+                  large: get_string_value(imageset_elem, './LargeImage/URL'),
+              }
+            end
+          end
+        end
+
+        # 類似商品
         similar_asins = []
-        similar_elems.each do |similar_elem|
-          similar_asins <<  similar_elem.get('./ASIN')
+        if exists_elem?(item, 'SimilarProducts')
+          similar_elems = item.get_elements('SimilarProducts/SimilarProduct')
+          similar_elems ||= []
+          similar_elems.each do |similar_elem|
+            similar_asins <<  similar_elem.get('./ASIN')
+          end
         end
         item.similar_asins = similar_asins.join(',') if similar_asins.present?
-        
+
+        # カテゴリ
+        browse_nodes = []
+        if exists_elem?(item, 'BrowseNodes')
+          node_elems = item.get_elements('BrowseNodes/BrowseNode')
+          node_elems ||= []
+          nodes = []
+          node_elems.each do |node_elem|
+            browse_nodes <<  get_browse_node(node_elem, nodes, "Ancestors")
+          end
+        end
+
+        # 商品説明
+        product_description = nil
+        if exists_elem?(item, 'EditorialReviews')
+          review_elem = item.get_element('EditorialReviews/EditorialReview')
+          product_description = get_string_value(review_elem, './Content')
+        end
+
+        # 詳細情報の構築
+        detail.features = features.to_json if features.present?
+        detail.similarities = similar_asins.to_json if similar_asins.present?
+        detail.image_urls = image_urls.to_json if image_urls.present?
+        detail.product_description = product_description if product_description.present?
+        detail.browse_nodes = browse_nodes.to_json if browse_nodes.present?
+        entity.detail_data = detail
+        p detail.inspect
+
+        # サイズの決定
         entity.define_size
         entity.initialized = true
         entity.initialized_at = Time.now
@@ -102,6 +165,22 @@ module PaApi::ProductParseHelper
         entities << entity
       end
       entities
+    end
+
+    def self.get_browse_node(elem, nodes, direction)
+      node = {
+          node_id: get_string_value(elem, "./BrowseNodeId"),
+          node_name: get_string_value(elem, "./Name"),
+      }
+
+      node[:is_root] = true if get_string_value(elem, "./IsCategoryRoot").to_s == "1"
+      nodes << node
+
+      if exists_elem?(elem, direction)
+        item.get_element(direction).get_element("BrowseNode")
+        nodes = nodes | get_browse_node(elem, nodes, direction)
+      end
+      nodes
     end
     
     def self.get_string_value(elem, *path)
