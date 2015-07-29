@@ -25,7 +25,15 @@ class Yahoo::Jp::Shopping::ApiAdapter
     }
 
     Rails.logger.debug "POST #{url}, #{parameters}, #{header}"
-    @agent.post(url, parameters, header)
+    begin
+      @agent.post(url, parameters, header)
+    rescue Mechanize::ResponseCodeError => e
+      Rails.logger.error "#{e.response_code} - #{e.message}\n#{caller.join("\n")}"
+      if e.respond_to?(:page)
+        Rails.logger.error e.page.body
+      end
+      raise e
+    end
     JSON.parse @agent.page.body
   end
 
@@ -46,8 +54,11 @@ class Yahoo::Jp::Shopping::ApiAdapter
           nil,
           create_auth_header
       )
-    rescue => e
-      Rails.logger.error e.page.body
+    rescue Mechanize::ResponseCodeError => e
+      Rails.logger.error "#{e.response_code} - #{e.message}\n#{caller.join("\n")}"
+      if e.respond_to?(:page)
+        Rails.logger.error e.page.body
+      end
       raise e
     end
 
@@ -523,7 +534,6 @@ class Yahoo::Jp::Shopping::ApiAdapter
   private
   def create_auth_header
     header = {
-        "Host" => "circus.shopping.yahooapis.jp",
         "Authorization" => "Bearer #{@auth_token}"
     }
   end
