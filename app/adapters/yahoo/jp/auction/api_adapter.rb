@@ -94,6 +94,8 @@ class Yahoo::Jp::Auction::ApiAdapter
     res
   end
 
+  # list	string	sold ： 落札者ありの一覧を表示します。
+  # not_sold ： 落札者なしの一覧を表示します。
   def myCloseList(start=1,output=:xml,list=:sold)
     # マイ・オークション表示（出品終了分）
     parameter = {}

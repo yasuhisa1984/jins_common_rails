@@ -47,6 +47,26 @@ class String
       end
     end
     html
-  end  
+  end
+
+  def get_exact_size
+    self.each_char.map{|c| c.bytesize == 1 ? 1 : 2}.reduce(0, &:+)
+  end
+
+  def round_exact_size(length)
+    rounded_arr = []
+    bytes_arr = []
+
+    self.each_char do |c|
+      tmp_arr = rounded_arr + [c]
+      tmp_length = tmp_arr.map{|c| c.bytesize == 1 ? 1 : 2}.reduce(0, &:+)
+
+      break if tmp_length > length
+
+      rounded_arr << c
+      break if tmp_length == length
+    end
+    rounded_arr.join('')
+  end
 
 end

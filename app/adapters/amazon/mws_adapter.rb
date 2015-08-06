@@ -65,6 +65,7 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser]
   def get_matching_product_for_id(id_type, id_list)
     begin
+      id_list = id_list.compact.sort.uniq
       return get_product_client.get_matching_product_for_id(id_type, *id_list)
     rescue => e
       if e.respond_to?(:response) && e.response.present?
@@ -84,6 +85,7 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser]
   def get_matching_product(asins)
     begin
+      asins = asins.compact.sort.uniq
       return get_product_client.get_matching_product(*asins)
     rescue => e
       if e.respond_to?(:response) && e.response.present?
@@ -103,6 +105,7 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser]
   def get_competitive_pricing_for_sku(skus)
     begin
+      asins = asins.compact.sort.uniq
       return get_product_client.get_competitive_pricing_for_sku(*skus)
     rescue => e
       if e.response.present?
@@ -122,6 +125,7 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser]
   def get_competitive_pricing_for_asin(asins)
     begin
+      asins = asins.compact.sort.uniq
       return get_product_client.get_competitive_pricing_for_asin(*asins)
     rescue => e
       if e.response.present?
@@ -166,6 +170,7 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser]
   def get_lowest_offer_listings_for_asin(asins)
     begin
+      asins = asins.compact.sort.uniq
       return get_product_client.get_lowest_offer_listings_for_asin(*asins)
     rescue => e
       if e.response.present?
@@ -208,6 +213,7 @@ class Amazon::MwsAdapter
   # @return [Peddler::XMLParser]
   def get_my_price_for_asin(asins)
     begin
+      asins = asins.compact.sort.uniq
       return get_product_client.get_my_price_for_asin(*asins)
     rescue => e
       if e.response.present?

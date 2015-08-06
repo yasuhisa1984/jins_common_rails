@@ -22,11 +22,13 @@ class Amazon::PaApiAdapter
   def item_lookup_by_ean(item_ids = [], opts = {})
     opts[:id_type] = "EAN"
     opts[:search_index] = "All"
+    item_ids = item_ids.compact.sort.uniq
     self.item_lookup(item_ids, opts)
   end
 
   def item_lookup(item_ids = [], opts = {})
     opts[:country] ||= @country
+    item_ids = item_ids.compact.sort.uniq
     Amazon::Ecs.item_lookup(item_ids.join(","), opts)
   end
 
