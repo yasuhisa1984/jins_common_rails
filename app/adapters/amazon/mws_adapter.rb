@@ -889,6 +889,88 @@ class Amazon::MwsAdapter
       raise e
     end
   end
+  
+  # Requests that Amazon ship items from the seller's Amazon Fulfillment
+  # Network inventory to a destination address
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/fba_outbound/FBAOutbound_CreateFulfillmentOrder.html
+  # @param seller_fulfillment_order_id [String]
+  # @param displayable_order_id [String]
+  # @param displayable_order_date_time [String, #iso8601]
+  # @param displayable_order_comment [String]
+  # @param shipping_speed_category [String]
+  # @param destination_address [Struct, Hash]
+  # @param items [Array<Struct, Hash>]
+  # @param opts [Hash]
+  # @option opts [String] :fulfillment_action
+  # @option opts [String] :fulfillment_policy
+  # @option opts [Array<String>] :notification_email_list
+  # @option opts [Struct, Hash] :cod_settings
+  # @return [Peddler::XMLParser]
+  # rubocop:disable MethodLength, ParameterLists
+  def create_fulfillment_order(seller_fulfillment_order_id, displayable_order_id, displayable_order_date_time, 
+                               displayable_order_comment, shipping_speed_category, destination_address, items, opts = {})
+    Rails.logger.info "create_fulfillment_order => #{seller_fulfillment_order_id}, #{displayable_order_id}, #{displayable_order_date_time}, #{displayable_order_comment}, #{shipping_speed_category}, #{destination_address}, #{items}, #{opts}"
+
+    begin
+      res = get_outbound_shipment_client.create_fulfillment_order(
+                seller_fulfillment_order_id, 
+                displayable_order_id, 
+                displayable_order_date_time, 
+                displayable_order_comment, 
+                shipping_speed_category, 
+                destination_address, 
+                items, 
+                opts
+             )
+             
+      Rails.logger.info res.data[:body]
+
+      return res.data[:body]
+    rescue => e
+      if e.respond_to?(:response) && e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
+    
+  end
+
+  # Updates and/or requests shipment for a fulfillment order with an order
+  # hold on it
+  #
+  # @see http://docs.developer.amazonservices.com/en_US/fba_outbound/FBAOutbound_UpdateFulfillmentOrder.html
+  # @param seller_fulfillment_order_id [String]
+  # @param opts [Hash]
+  # @option opts [String] :fulfillment_action
+  # @option opts [String] :displayable_order_id
+  # @option opts [String, #iso8601] :displayable_order_date_time
+  # @option opts [String] :displayable_order_comment
+  # @option opts [String] :shipping_speed_category
+  # @option opts [Struct, Hash] :destination_address
+  # @option opts [String] :fulfillment_policy
+  # @option opts [Array<String>] :notification_email_list
+  # @option opts [Array<Struct, Hash>] :items
+  # @return [Peddler::XMLParser]
+  def update_fulfillment_order(seller_fulfillment_order_id, opts = {})
+
+    Rails.logger.info "update_fulfillment_order => #{seller_fulfillment_order_id}, #{opts}"
+    begin
+      res = get_outbound_shipment_client.update_fulfillment_order(
+                seller_fulfillment_order_id, 
+                opts
+             )
+             
+      Rails.logger.info res.data[:body]
+
+      return res.data[:body]
+    rescue => e
+      if e.respond_to?(:response) && e.response.present?
+        Rails.logger.error e.response.body
+      end
+      raise e
+    end
+  end
 
 
   # Gets the MWS Auth Token of the seller account
@@ -975,6 +1057,19 @@ class Amazon::MwsAdapter
       @inbound_shipment_client.auth_token = @auth_token if @auth_token.present?
     end
     @inbound_shipment_client
+  end
+
+  def get_outbound_shipment_client
+    if @outbound_shipment_client.blank?
+      @outbound_shipment_client = MWS.fulfillment_outbound_shipment(
+          :marketplace_id => @marketplace_id,
+          :merchant_id => @merchant_id,
+          :aws_access_key_id => @access_key_id,
+          :aws_secret_access_key => @secret_access_key
+      )
+      @outbound_shipment_client.auth_token = @auth_token if @auth_token.present?
+    end
+    @outbound_shipment_client
   end
 
   def get_sellers_client

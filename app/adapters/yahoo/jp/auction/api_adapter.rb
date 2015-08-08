@@ -141,15 +141,73 @@ class Yahoo::Jp::Auction::ApiAdapter
           has_offer: ret.at('./Option/HasOffer').text,
           is_trading_navi: ret.at('./Option/IsTradingNaviAuction').text,
           winner_id: ret.at('./Winner/Id').text,
-          message:  ret.at('./Message/Title').text,
       }
       if ret.at('./Option/IsTradingNaviAuction').present?
         result[:is_trading_navi] = ret.at('./Option/IsTradingNaviAuction').text
+      end
+      if ret.at('./Message/Title').present?
+        result[:message] = ret.at('./Message/Title').text
       end
 
       results << result
     end
 
+
+    res[:results] = results
+    res
+  end
+  
+  def myWinnerList(auction_id)
+    # マイ・オークション表示（出品終了分）
+    parameter = {}
+
+    # 必須パラメータ
+    parameter["auctionid"] = auction_id
+    parameter["output"] = :xml
+
+    begin
+      @agent.get(
+          "https://auctions.yahooapis.jp/AuctionWebService/V1/myWinnerList",
+          parameter,
+          nil,
+          create_auth_header
+      )
+    rescue Mechanize::ResponseCodeError => e
+      Rails.logger.error "#{e.response_code} - #{e.message}\n#{caller.join("\n")}"
+      if e.respond_to?(:page)
+        Rails.logger.error e.page.body
+      end
+      raise e
+    end
+
+    xml_doc = Nokogiri::XML(@agent.page.body)
+    xml_doc.remove_namespaces!
+
+    result_set = xml_doc.at('//ResultSet')
+    res = {
+        availables: result_set.attribute('totalResultsAvailable').value.to_i,
+        returned:  result_set.attribute('totalResultsReturned').value.to_i,
+        position: result_set.attribute('firstResultPosition').value.to_i
+
+    }
+
+    results = []
+    xml_doc.search('//Result').each do |ret|
+      next if ret.at('./AuctionID').blank?
+      
+      ret.search('./HighestBidders/Bidder').each do |bidder|
+        result = {
+            auction_id: ret.at('./AuctionID').text,
+            title: ret.at('./Title').text,
+            end_time: Time.parse(ret.at('./EndTime').text),
+            winner_id: bidder.at('./Id').text,
+            highest_price: bidder.at('./HighestPrice').text.gsub(",","").to_i,
+            progress: bidder.at('./Progress').text,
+        }
+  
+        results << result
+      end
+    end
 
     res[:results] = results
     res
