@@ -57,13 +57,13 @@ class String
     rounded_arr = []
     bytes_arr = []
 
-    self.each_char do |c|
-      tmp_arr = rounded_arr + [c]
+    self.each_char do |chr|
+      tmp_arr = rounded_arr + [chr]
       tmp_length = tmp_arr.map{|c| c.bytesize == 1 ? 1 : 2}.reduce(0, &:+)
 
       break if tmp_length > length
 
-      rounded_arr << c
+      rounded_arr << chr
       break if tmp_length == length
     end
     rounded_arr.join('')
