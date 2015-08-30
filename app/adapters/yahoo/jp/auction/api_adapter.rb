@@ -128,7 +128,6 @@ class Yahoo::Jp::Auction::ApiAdapter
         availables: result_set.attribute('totalResultsAvailable').value.to_i,
         returned:  result_set.attribute('totalResultsReturned').value.to_i,
         position: result_set.attribute('firstResultPosition').value.to_i
-
     }
 
     results = []
@@ -145,8 +144,14 @@ class Yahoo::Jp::Auction::ApiAdapter
       if ret.at('./Option/IsTradingNaviAuction').present?
         result[:is_trading_navi] = ret.at('./Option/IsTradingNaviAuction').text
       end
+      
       if ret.at('./Message/Title').present?
         result[:message] = ret.at('./Message/Title').text
+      end
+      
+      result[:condition] = :used
+      if ret.at('.//Option/ItemStatusNewIconUrl').present?
+        result[:condition] = :new if ret.at('.//Option/ItemStatusNewIconUrl').text.present?
       end
 
       results << result
